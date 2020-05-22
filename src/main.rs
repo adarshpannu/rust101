@@ -1,27 +1,18 @@
+use std::collections::HashMap;
 
 struct Cacher<T: Fn(i32) -> i32> {
     closure:        T,
-    param_opt:      Option<i32>,
-    retval_opt:     Option<i32>
+    hash_map:       HashMap<i32,i32>,
 }
 
 impl<T> Cacher<T> where T: Fn(i32) -> i32 {
     fn new(closure: T) -> Cacher<T> {
-        Cacher {closure, param_opt: None, retval_opt: None}
+        let hash_map = HashMap::new();
+        Cacher {closure, hash_map}
     }
 
     fn call(&mut self, param: i32) -> i32 {
-        if Some(param) == self.param_opt {
-            println!("Reuse cache param={}", param);
-            self.retval_opt.unwrap()
-        } else {
-            // Call the closure and reset cache
-            println!("Reset cache param={}", param);
-            let retval = (self.closure)(param);
-            self.param_opt = Some(param);
-            self.retval_opt = Some(retval);
-            retval
-        }
+        *(self.hash_map.entry(param).or_insert( (self.closure)(param) ))
     }
 }
 
