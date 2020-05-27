@@ -1,3 +1,5 @@
+// testing!
+
 use std::collections::HashMap;
 
 struct Cacher<T: Fn(i32) -> i32> {
