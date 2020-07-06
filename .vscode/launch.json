@@ -7,15 +7,15 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug executable 'closures'",
+            "name": "Debug executable 'rust101'",
             "cargo": {
                 "args": [
                     "build",
-                    "--bin=closures",
-                    "--package=closures"
+                    "--bin=rust101",
+                    "--package=rust101"
                 ],
                 "filter": {
-                    "name": "closures",
+                    "name": "rust101",
                     "kind": "bin"
                 }
             },
@@ -25,16 +25,16 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug unit tests in executable 'closures'",
+            "name": "Debug unit tests in executable 'rust101'",
             "cargo": {
                 "args": [
                     "test",
                     "--no-run",
-                    "--bin=closures",
-                    "--package=closures"
+                    "--bin=rust101",
+                    "--package=rust101"
                 ],
                 "filter": {
-                    "name": "closures",
+                    "name": "rust101",
                     "kind": "bin"
                 }
             },

@@ -1,5 +1,5 @@
 [package]
-name = "closures"
+name = "rust101"
 version = "0.1.0"
 authors = ["Adarsh Pannu <13154869+adarshpannu@users.noreply.github.com>"]
 edition = "2018"
