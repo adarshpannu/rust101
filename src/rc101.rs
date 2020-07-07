@@ -1,47 +1,72 @@
-use std::rc::Rc;
+#![allow(warnings)]
 
-#[derive(Debug)]
-struct Point(i32, i32);
+mod tests {
+    #[derive(Debug)]
+    struct Point(i32, i32);
+    use std::rc::Rc;
 
-#[test]
-fn test_rc() {
-    // Instantiate
-    let mut rc1 = Rc::new(Point(-1, 2));
+    #[test]
+    fn test_cloning() {
+        // Instantiate
+        let mut rc1 = Rc::new(Point(-1, 2));
 
-    // Clone
-    dbg!(Rc::strong_count(&rc1));
+        // Clone
+        assert_eq!(Rc::strong_count(&rc1), 1);
 
-    // Cannot move wrapped value out if it doesn't implement Copy
-    // let wrapped_point = *rc; <- Will not compile
+        // Cloning
+        {
+            let rc2 = Rc::clone(&rc1);
+            assert_eq!(Rc::strong_count(&rc1), 2);
+            assert_eq!(Rc::strong_count(&rc2), 2);
+        }
+        assert_eq!(Rc::strong_count(&rc1), 1);
+    }
 
-    // Can get a reference to the wrapped value
-    let wrapped_point = &*rc1;
-    dbg!(wrapped_point);
+    #[test]
+    fn test_access_inner() {
+        // Instantiate
+        let rc1 = Rc::new(Point(-1, 2));
 
-    // Can get the mutable reference to the wrapped value (if only one shared owner of Rc)
-    let wrapped_point = Rc::get_mut(&mut rc1);
-    dbg!(wrapped_point);
+        // Cannot move wrapped value out if it doesn't implement Copy.
+        // let wrapped_point = *rc; <- Will not compile
 
-    // Cloning
-    {
+        // Can get a reference to the wrapped value
+        let wrapped_point = &*rc1;
+        assert_eq!(wrapped_point.0, -1);
+
+        // Can get the wrapped value and own it!
+        // However, you can use try_unwrap() if Rc::strong_count() == 1
+        // Ref: https://doc.rust-lang.org/std/rc/struct.Rc.html#method.try_unwrap
+        let wrapped_result = Rc::try_unwrap(rc1);
+        assert!(wrapped_result.is_ok());
+        let _p_owned = wrapped_result.unwrap();
+
+        // Re-Instantiate
+        let mut rc1 = Rc::new(Point(-1, 2));
+
+        // Can get the mutable reference to the wrapped value (if only one shared owner of Rc)
+        let wrapped_point = Rc::get_mut(&mut rc1);
+        assert!(wrapped_point.is_some());
+
         let rc2 = Rc::clone(&rc1);
-        dbg!(Rc::strong_count(&rc1));
-        dbg!(Rc::strong_count(&rc2));
 
         // Can no longer get mutable inner because of 2 shared owners
         let wrapped_point = Rc::get_mut(&mut rc1);
         assert!(wrapped_point.is_none());
 
     }
-    dbg!(Rc::strong_count(&rc1));
 
-    // Equality: Do two Rcs point to the same wrapped value?
-    let rc2 = Rc::clone(&rc1);
-    assert!(Rc::ptr_eq(&rc1, &rc2));
+    #[test]
+    fn test_equality() {
+        let rc1 = Rc::new(Point(-1, 2));
+        let rc2 = Rc::clone(&rc1);
 
-    let rc2 = Rc::new(Point(100, 200));
-    assert!(! Rc::ptr_eq(&rc1, &rc2));
+        // Equality: Cloned RCs that have the same inner pointer
+        assert!(Rc::ptr_eq(&rc1, &rc2));
 
-    // Sameness - 
+        let rc2 = Rc::new(Point(100, 200));
+        assert!(!Rc::ptr_eq(&rc1, &rc2));
 
+        // Sameness -
+    }
 }
