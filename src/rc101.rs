@@ -1,24 +1,27 @@
-#![allow(warnings)]
+#![allow(unused_imports)]
 
 mod tests {
+    use std::rc::Rc;
+
     #[derive(Debug)]
     struct Point(i32, i32);
-    use std::rc::Rc;
 
     #[test]
     fn test_cloning() {
         // Instantiate
-        let mut rc1 = Rc::new(Point(-1, 2));
+        let rc1 = Rc::new(Point(-1, 2));
 
-        // Clone
+        // Check strong_count
         assert_eq!(Rc::strong_count(&rc1), 1);
 
-        // Cloning
+        // Cloning increases strong_count
         {
             let rc2 = Rc::clone(&rc1);
             assert_eq!(Rc::strong_count(&rc1), 2);
             assert_eq!(Rc::strong_count(&rc2), 2);
         }
+
+        // The clone drops off
         assert_eq!(Rc::strong_count(&rc1), 1);
     }
 
@@ -28,7 +31,7 @@ mod tests {
         let rc1 = Rc::new(Point(-1, 2));
 
         // Cannot move wrapped value out if it doesn't implement Copy.
-        // let wrapped_point = *rc; <- Will not compile
+        // let wrapped_point = *rc; // <- Will not compile
 
         // Can get a reference to the wrapped value
         let wrapped_point = &*rc1;
@@ -48,7 +51,7 @@ mod tests {
         let wrapped_point = Rc::get_mut(&mut rc1);
         assert!(wrapped_point.is_some());
 
-        let rc2 = Rc::clone(&rc1);
+        let _rc2 = Rc::clone(&rc1);
 
         // Can no longer get mutable inner because of 2 shared owners
         let wrapped_point = Rc::get_mut(&mut rc1);
