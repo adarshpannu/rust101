@@ -1,10 +1,17 @@
-#![allow(unused_imports)]
+#![allow(warnings)]
+
+#[derive(Debug)]
+struct Point(i32, i32);
+
+impl Point {
+    fn distance_from_origin(&self) -> f64 {
+        (((self.0 * self.0) + (self.1 * self.1)) as f64).sqrt()
+    }
+}
 
 mod tests {
     use std::rc::Rc;
-
-    #[derive(Debug)]
-    struct Point(i32, i32);
+    use super::Point;
 
     #[test]
     fn test_cloning() {
@@ -21,7 +28,7 @@ mod tests {
             assert_eq!(Rc::strong_count(&rc2), 2);
         }
 
-        // The clone drops off
+        // strong_count decreases when a clone drops off
         assert_eq!(Rc::strong_count(&rc1), 1);
     }
 
@@ -37,8 +44,7 @@ mod tests {
         let wrapped_point = &*rc1;
         assert_eq!(wrapped_point.0, -1);
 
-        // Can get the wrapped value and own it!
-        // However, you can use try_unwrap() if Rc::strong_count() == 1
+        // Can get the wrapped value and own it ... but only if Rc::strong_count() == 1
         // Ref: https://doc.rust-lang.org/std/rc/struct.Rc.html#method.try_unwrap
         let wrapped_result = Rc::try_unwrap(rc1);
         assert!(wrapped_result.is_ok());
@@ -60,16 +66,35 @@ mod tests {
     }
 
     #[test]
+    fn test_access_inner_state() {
+        let rc1 = Rc::new(Point(3, 4));
+
+        // Access fields directly
+        assert_eq!(rc1.0, 3);
+        assert_eq!(rc1.1, 4);
+
+        // Access methods directly
+        assert_eq!(rc1.distance_from_origin(), 5f64);
+
+    }
+
+    #[test]
     fn test_equality() {
         let rc1 = Rc::new(Point(-1, 2));
         let rc2 = Rc::clone(&rc1);
 
-        // Equality: Cloned RCs that have the same inner pointer
+        // Clones have the same inner pointer? Yes
         assert!(Rc::ptr_eq(&rc1, &rc2));
 
-        let rc2 = Rc::new(Point(100, 200));
-        assert!(!Rc::ptr_eq(&rc1, &rc2));
+        // Non-clones will not have the same inner pointer
+        let rc3 = Rc::new(Point(-1, 2));
+        assert!(Rc::ptr_eq(&rc1, &rc3) == false);
 
-        // Sameness -
+        // Non-clones can only be compared if they implement the PartialEq (which Point does not!)
+        // assert_eq!(rc1, rc2); // <- Will not compile
+        
+        let rcint1 = Rc::new(101);
+        let rcint2 = Rc::new(101);
+        assert_eq!(rcint1, rcint2)
     }
 }
