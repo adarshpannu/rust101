@@ -1,13 +1,15 @@
-mod rc101;
-mod refcell101;
-mod guess;
 
+#[allow(unused_imports)]
 use std::io::{self, Write};
 
-fn main() {
-    print!("Enter a line: ");
-    io::stdout().flush().unwrap();
+fn main() {    
+    let str = String::from("Hello, World");
+    let (_, len) = strlen(str);
+    println!("{}", len);
 
-    let g: String = guess::guess_a_number();
-    println!("guess = {}", g)
+}
+
+fn strlen(s: String) -> (String, usize) {
+    let len = s.len();
+    (s, len)
 }
