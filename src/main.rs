@@ -1,28 +1,32 @@
-
-#[allow(unused_imports)]
-use std::io::{self, Write};
-
-fn main() {    
-    let str = String::from("Hello, World");
-    let (_, len) = strlen(str);
-    println!("{}", len);
-
+struct Counter {
+    cur: u32,
+    max: u32,
 }
 
-fn strlen(s: String) -> (String, usize) {
-    let len = s.len();
-    (s, len)
+impl Counter {
+    fn new(max: u32) -> Counter {
+        Counter { cur: 0u32, max }
+    }
 }
 
-fn first_word(s: &String) -> usize {
-    let bytes = s.as_bytes();
-
-    for (i, &item) in bytes.iter().enumerate() {
-        if item == b' ' {
-            return i;
+impl Iterator for Counter {
+    type Item = u32;
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.cur < self.max {
+            let old_cur = self.cur;
+            self.cur += 1;
+            Some(old_cur)
+        } else {
+            None
         }
     }
-
-    s.len()
 }
 
+#[allow(unused_imports)]
+fn main() {
+    let ctr = Counter::new(5);
+
+    for elem in ctr {
+        println!("{}", elem)
+    }
+}
