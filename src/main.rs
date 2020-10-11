@@ -1,32 +1,17 @@
-struct Counter {
-    cur: u32,
-    max: u32,
-}
-
-impl Counter {
-    fn new(max: u32) -> Counter {
-        Counter { cur: 0u32, max }
-    }
-}
-
-impl Iterator for Counter {
-    type Item = u32;
-    fn next(&mut self) -> Option<Self::Item> {
-        if self.cur < self.max {
-            let old_cur = self.cur;
-            self.cur += 1;
-            Some(old_cur)
-        } else {
-            None
-        }
-    }
-}
 
 #[allow(unused_imports)]
-fn main() {
-    let ctr = Counter::new(5);
 
-    for elem in ctr {
-        println!("{}", elem)
-    }
+#[derive(Debug)]
+enum List<T> {
+    Nil,
+    Cons(T, Box<List<T>>)
+}
+
+use List::*;
+
+fn main() {
+    let l1 = Cons(10, Box::new(Nil));
+    let l2 = Cons(20, Box::new(l1));
+
+    println!("l2 = {:?}", l2);
 }
