@@ -1,17 +1,29 @@
 
 #[allow(unused_imports)]
 
+use std::ops::Deref;
+
 #[derive(Debug)]
-enum List<T> {
-    Nil,
-    Cons(T, Box<List<T>>)
+struct MyBox<T> {
+    elem: T
 }
 
-use List::*;
+impl<T> MyBox<T> {
+    fn new(elem: T) -> Self {
+        MyBox {elem}
+    }
+}
+
+impl<T> Deref for MyBox<T> {
+    type Target = T;
+    fn deref(&self) -> &Self::Target {
+        &self.elem
+    }
+}
 
 fn main() {
-    let l1 = Cons(10, Box::new(Nil));
-    let l2 = Cons(20, Box::new(l1));
+    let box1 = MyBox::new(String::from("abc"));
+    let elem = &*box1;
 
-    println!("l2 = {:?}", l2);
+    println!("box1 = {:?}", elem);
 }
