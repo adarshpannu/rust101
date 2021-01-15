@@ -1,29 +1,24 @@
 
-#[allow(unused_imports)]
+#![allow(warnings)]
 
-use std::ops::Deref;
-
-#[derive(Debug)]
-struct MyBox<T> {
-    elem: T
-}
-
-impl<T> MyBox<T> {
-    fn new(elem: T) -> Self {
-        MyBox {elem}
-    }
-}
-
-impl<T> Deref for MyBox<T> {
-    type Target = T;
-    fn deref(&self) -> &Self::Target {
-        &self.elem
-    }
-}
+use std::fmt::Debug;
 
 fn main() {
-    let box1 = MyBox::new(String::from("abc"));
-    let elem = &*box1;
+    let keytimes = [(0, 2), (1, 5), (0, 9), (2, 10)];
+    slowest_key(&keytimes);
+}
 
-    println!("box1 = {:?}", elem);
+fn slowest_key(keytimes: &[(i32, i32)]) -> i32 {
+    let mut prev_time = 0;
+    let max = keytimes
+        .iter()
+        .map(|&(key, time)| {
+            let diff = time - prev_time;
+            prev_time = time;
+            diff
+        })
+        .enumerate()
+        .max_by(|e1, e2| e1.1.cmp(&e2.1));
+    dbg!(&max);
+    0
 }
