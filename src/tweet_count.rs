@@ -17,7 +17,7 @@ enum Granularity {
 struct Stats {
     day: u64,
     hour: [u64; 24],
-    minute: [[u64; 60]; 24],
+    minute: [u64; 24 * 60],
 }
 
 impl Stats {
@@ -25,7 +25,7 @@ impl Stats {
         Stats {
             day: 0,
             hour: [0; 24],
-            minute: [[0; 60]; 24],
+            minute: [0; 24 * 60],
         }
     }
 }
@@ -67,7 +67,7 @@ impl Counter {
         let minute = timestamp.get_mm();
         stats.day += 1;
         stats.hour[hour] += 1;
-        stats.minute[hour][minute] += 1;
+        stats.minute[hour * 24 + minute] += 1;
     }
 
     fn getEventCount(
@@ -78,8 +78,31 @@ impl Counter {
         granularity: Granularity,
     ) {
         let (start_day, end_day) = (start.get_yyyyddmm(), end.get_yyyyddmm());
-        for (key, value) in self.btree.range((Included(&start), Included(&end))) {
-            println!("{:?}: {:?}", &key, &value.day);
+        let (start_hour, end_hour) = (start.get_hh(), end.get_hh());
+        let (start_minute, end_minute) = (start.get_mm(), end.get_mm());
+        for (day, stats) in self.btree.range((Included(&start_day), Included(&end_day))) {
+            println!("--- Found {:?}: {:?}", &day, &stats.day);
+
+            let window = if start_day == *day {
+                &stats.minute[((start_hour * 60) + start_minute)..]
+            } else if end_day == *day {
+                &stats.minute[..(end_hour * 60) + end_minute]
+            } else {
+                &stats.minute[..]
+            };
+
+            match granularity {
+                Granularity::DAY => {
+                    let count: u64 = window.iter().sum();
+                    println!("{:?} = {}", *day, count);
+                }
+                Granularity::HOUR => {
+                    for hour in 0..24 {
+                        
+                    }
+                }
+                Granularity::MINUTE => {}
+            }
         }
     }
 }
@@ -96,11 +119,10 @@ fn test() {
     ctr.record_tweet(EventType::TWEET, Timestamp(2021_01_03_09_01));
     ctr.record_tweet(EventType::TWEET, Timestamp(2021_01_03_09_21));
 
-
     ctr.getEventCount(
         EventType::TWEET,
         Timestamp(2021_01_01_00_00),
         Timestamp(2021_03_01_00_00),
-        Granularity::MINUTE,
+        Granularity::DAY,
     )
 }
