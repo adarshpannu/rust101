@@ -15,16 +15,12 @@ enum Granularity {
 
 #[derive(Debug)]
 struct Stats {
-    day: u64,
-    hour: [u64; 24],
     minute: [u64; 24 * 60],
 }
 
 impl Stats {
     fn new() -> Stats {
         Stats {
-            day: 0,
-            hour: [0; 24],
             minute: [0; 24 * 60],
         }
     }
@@ -39,16 +35,8 @@ struct Counter {
 struct Timestamp(usize);
 
 impl Timestamp {
-    fn get_yyyyddmm(&self) -> Timestamp {
-        Timestamp((self.0 / 10000) * 10000)
-    }
-
-    fn get_hh(&self) -> usize {
-        (self.0 % 10000) as usize / 100
-    }
-
-    fn get_mm(&self) -> usize {
-        (self.0 % 100) as usize
+    fn pieces(&self) -> (usize, usize, usize) {
+        ((self.0 / 10000) * 10000, (self.0 % 10000) as usize / 100, (self.0 % 100) as usize)
     }
 }
 
@@ -61,12 +49,9 @@ impl Counter {
 
     // timestamp format: YYYY_MM_DD_HH_MM
     fn record_tweet(&mut self, event_type: EventType, timestamp: Timestamp) {
-        let key = timestamp.get_yyyyddmm();
+        let (day, hour, minute) = timestamp.pieces();
+        let key = Timestamp(day);
         let stats = self.btree.entry(key).or_insert(Stats::new());
-        let hour = timestamp.get_hh();
-        let minute = timestamp.get_mm();
-        stats.day += 1;
-        stats.hour[hour] += 1;
         stats.minute[hour * 24 + minute] += 1;
     }
 
@@ -77,11 +62,18 @@ impl Counter {
         end: Timestamp,
         granularity: Granularity,
     ) {
-        let (start_day, end_day) = (start.get_yyyyddmm(), end.get_yyyyddmm());
-        let (start_hour, end_hour) = (start.get_hh(), end.get_hh());
-        let (start_minute, end_minute) = (start.get_mm(), end.get_mm());
+        let (start_day, start_hour, start_minute) = start.pieces();
+        let (end_day, end_hour, end_minute) = end.pieces();
+        let (start_day, end_day) = (Timestamp(start_day), Timestamp(end_day));
+        let offset: usize = (start_hour * 60) + start_minute;
+        dbg!(offset);
+
         for (day, stats) in self.btree.range((Included(&start_day), Included(&end_day))) {
-            println!("--- Found {:?}: {:?}", &day, &stats.day);
+            println!("--- Found {:?}", &day);
+
+            if start_day == *day {
+                
+            }            
 
             let window = if start_day == *day {
                 &stats.minute[((start_hour * 60) + start_minute)..]
@@ -111,18 +103,18 @@ impl Counter {
 fn test() {
     let mut ctr = Counter::new();
 
-    ctr.record_tweet(EventType::TWEET, Timestamp(2021_01_01_06_01));
-    ctr.record_tweet(EventType::TWEET, Timestamp(2021_01_02_06_02));
-    ctr.record_tweet(EventType::TWEET, Timestamp(2021_01_02_06_01));
+    ctr.record_tweet(EventType::TWEET, Timestamp(2021_01_01_08_30));
+    ctr.record_tweet(EventType::TWEET, Timestamp(2021_01_02_07_30));
+    ctr.record_tweet(EventType::TWEET, Timestamp(2021_01_02_10_30));
 
-    ctr.record_tweet(EventType::TWEET, Timestamp(2021_01_03_06_01));
-    ctr.record_tweet(EventType::TWEET, Timestamp(2021_01_03_09_01));
-    ctr.record_tweet(EventType::TWEET, Timestamp(2021_01_03_09_21));
+    ctr.record_tweet(EventType::TWEET, Timestamp(2021_01_03_08_30));
+    ctr.record_tweet(EventType::TWEET, Timestamp(2021_01_03_09_00));
+    ctr.record_tweet(EventType::TWEET, Timestamp(2021_01_03_10_00));
 
     ctr.getEventCount(
         EventType::TWEET,
-        Timestamp(2021_01_01_00_00),
-        Timestamp(2021_03_01_00_00),
+        Timestamp(2021_01_01_07_30),
+        Timestamp(2021_03_01_10_30),
         Granularity::DAY,
     )
 }
