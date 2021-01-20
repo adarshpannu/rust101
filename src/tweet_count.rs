@@ -81,6 +81,8 @@ impl Counter {
         let mut event_count = 0usize; // count of events
         dbg!(index);
 
+        let mut prev_day;
+
         for (day, stats) in self.btree.range((Included(&start_day), Included(&end_day))) {
             println!("--- Read stats for {:?}", &day);
             while index < stats.minute.len() {
@@ -97,7 +99,8 @@ impl Counter {
                 index += nreadable;
                 nread += nreadable
             }
-            index = 0
+            index = 0;
+            prev_day = day;
         }
         if event_count > 0 {
             println!("Last batch incomplete, not reported: {}", event_count)
