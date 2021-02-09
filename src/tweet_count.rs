@@ -68,7 +68,6 @@ impl Counter {
     ) {
         let (start_day, start_hour, start_minute) = start.pieces();
         let (end_day, end_hour, end_minute) = end.pieces();
-        let (start_day, end_day) = (Timestamp(start_day), Timestamp(end_day));
 
         let batch_size: usize = match granularity {
             Granularity::DAY => 24 * 60,
@@ -81,8 +80,7 @@ impl Counter {
         let mut event_count = 0usize; // count of events
         dbg!(index);
 
-        let mut prev_day;
-
+        let (start_day, end_day) = (Timestamp(start_day), Timestamp(end_day));
         for (day, stats) in self.btree.range((Included(&start_day), Included(&end_day))) {
             println!("--- Read stats for {:?}", &day);
             while index < stats.minute.len() {
@@ -100,7 +98,6 @@ impl Counter {
                 nread += nreadable
             }
             index = 0;
-            prev_day = day;
         }
         if event_count > 0 {
             println!("Last batch incomplete, not reported: {}", event_count)
