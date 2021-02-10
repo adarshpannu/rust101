@@ -1,4 +1,4 @@
-// half-baked code designed to debug lifetime issues elsewhere, doesn't compile
+// half-baked code designed to debug lifetime issues
 
 use std::collections::hash_map::Values;
 use std::collections::HashMap;
@@ -21,7 +21,7 @@ impl<'a> HashClass<'a> {
         }
     }
 
-    fn foo(&'a mut self) {
+    fn init(&mut self) {
         let htable: HashMap<usize, char> = self
             .elems
             .iter()
@@ -29,23 +29,21 @@ impl<'a> HashClass<'a> {
             .map(|(ix, ch)| (ix, *ch))
             .collect();
         self.htable = htable;
-        let iter = self.htable.values().into_iter();
-        self.iter = Some(iter);
+        self.iter = Some(self.htable.values());
     }
 
+    /*
     fn next(&mut self) -> char {
-        let mut x = self.iter.as_ref().unwrap();
+        let mut x = self.unwrap();
         let mut y = x.next().unwrap();
         *y
     }
+    */
 }
 
 fn main() {
     let elems = vec!['a', 'b', 'c'];
 
     let mut hc = HashClass::new(elems);
-    hc.foo();
-    for e in &hc.iter {
-        println!("{:?}", e);
-    }
+    hc.init();
 }
