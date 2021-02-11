@@ -1,16 +1,16 @@
 #![allow(warnings)]
 
-//mod hashclass;
+mod so41270052;
 
 struct Person<'a> {
-    name: &'a str
+    full_name: String,
+    first_name: &'a str,
 }
 
 impl<'a> Person<'a> {
-
+    fn set_name(&mut self) {
+        self.first_name = &self.full_name[..4];
+    }
 }
 
-fn main()
-{
-
-}
+fn main() {}
