@@ -1,34 +1,21 @@
 #![allow(warnings)]
-use std::collections::HashMap;
-use std::str;
+
+mod hashmapwrapper;
 
 #[derive(Debug)]
-pub enum ParserError {
-    Generic
+struct ST<'a> {
+    elems: &'a Vec<i32>,
+    iter: Option<std::slice::Iter<'a, i32>>,
 }
 
-pub struct Resource(
-    pub HashMap<String, String>
-);
-
-pub struct Parser<'a> {
-    source: Option<str::Chars<'a>>
-}
-
-impl<'a> Parser<'a> {
-    pub fn new() -> Parser<'a> {
-        Parser { source: None }
-    }
-    pub fn parse(&mut self, source: &'a str) -> Result<Resource, ParserError> {
-        self.source = Some(source.chars());
-
-        let entries = HashMap::new();
-        Ok(Resource(entries))
+impl<'a> ST<'a> {
+    fn make_iter(&mut self) {
+        self.iter = Some(self.elems.iter());
     }
 }
-
 fn main() {
-    let mut parser = Parser::new();
-    parser.parse("key1 = Value 1");
-    parser.parse("key2 = Value 2");
+    let elems = vec![10, 30];
+    let iter = None;
+
+    let st = ST { elems: &elems, iter };
 }
