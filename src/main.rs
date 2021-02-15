@@ -1,25 +1,34 @@
 #![allow(warnings)]
 
 use std::cell::RefCell;
+use typed_arena::Arena;
 
+#[derive(Debug)]
 struct ProjectNode {
     cols: Vec<usize>,
 }
 
+#[derive(Debug)]
 struct CSVNode {
     name: String,
 }
 
 impl CSVNode {
-    fn new(arena: &NodeArena, name: String) -> &Node {
+    fn new(arena: &Arena<Node>, name: String) -> &Node {
         let base = NodeBase::CSVNode(CSVNode {
             name: "/tmp/foo.txt".to_string(),
         });
-        let node_id = arena.store_node(base, vec![]);
-        arena.get_node(node_id)
+        let node_id = arena.len();
+
+        arena.alloc(Node {
+            node_id,
+            base,
+            source: vec![],
+        })
     }
 }
 
+#[derive(Debug)]
 enum NodeBase {
     CSVNode(CSVNode),
     ProjectNode(ProjectNode),
@@ -27,6 +36,7 @@ enum NodeBase {
 
 type node_id = usize;
 
+#[derive(Debug)]
 struct Node {
     node_id: node_id,
     base: NodeBase,
@@ -34,43 +44,52 @@ struct Node {
 }
 
 impl Node {
-    fn project<'a>(&self, arena: &'a NodeArena, cols: Vec<usize>) -> &'a Node {
-        let pnode = NodeBase::ProjectNode(ProjectNode { cols: cols });
-        let node_id = arena.store_node(pnode, vec![self.node_id]);
-        arena.get_node(node_id)
+    fn project<'a>(&self, arena: &'a Arena<Node>, cols: Vec<usize>) -> &'a Node {
+        let base = NodeBase::ProjectNode(ProjectNode { cols: cols });
+        let node_id = arena.len();
+
+        arena.alloc(Node {
+            node_id,
+            base,
+            source: vec![],
+        })
     }
 }
 
 struct NodeArena {
-    nodes: RefCell<Vec<Node>>
+    nodes: Vec<Node>,
 }
 
 impl NodeArena {
     fn new() -> NodeArena {
-        NodeArena { nodes: RefCell::new(vec![]) }
+        NodeArena { nodes: vec![] }
     }
 
-    fn store_node(&self, base: NodeBase, source: Vec<node_id>) -> node_id {
-        let node_id = self.nodes.borrow().len();
+    fn store_node(&mut self, base: NodeBase, source: Vec<node_id>) -> node_id {
+        let node_id = self.nodes.len();
         let node = Node {
             node_id,
             base,
             source,
         };
-        self.nodes.borrow_mut().push(node);
+        self.nodes.push(node);
         node_id
     }
 
     fn get_node(&self, ix: node_id) -> &Node {
-        let elems = &*self.nodes.borrow();
-        &elems[ix]
+        &self.nodes[ix]
     }
+}
+struct Monster {
+    level: u32,
 }
 
 fn main() {
-    let arena = NodeArena::new();
+    let arena: Arena<_> = Arena::new();
 
-    let csvnode = CSVNode::new(&arena, "/tmp/foo.csv".to_string());
+    let pipeline = CSVNode::new(&arena, "/tmp/foo.csv".to_string())
+        .project(&arena, vec![0, 1, 2])
+        .project(&arena, vec![2, 1]);
 
-    let pnode = csvnode.project(&arena, vec![0, 2]);
+    dbg!(&pipeline);
 }
