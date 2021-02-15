@@ -9,3 +9,4 @@ edition = "2018"
 [dependencies]
 rand = "0.7"
 typed-arena = "2.0.1"
+id-arena = "2"

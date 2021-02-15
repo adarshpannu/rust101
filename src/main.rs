@@ -51,7 +51,7 @@ impl Node {
         arena.alloc(Node {
             node_id,
             base,
-            source: vec![],
+            source: vec![self.node_id],
         })
     }
 }
@@ -87,9 +87,55 @@ struct Monster {
 fn main() {
     let arena: Arena<_> = Arena::new();
 
-    let pipeline = CSVNode::new(&arena, "/tmp/foo.csv".to_string())
-        .project(&arena, vec![0, 1, 2])
-        .project(&arena, vec![2, 1]);
+    /*
+                       C ->
+                    /      \
+        A -> B ->              -> E
+                            /
+                    \  D ->
 
-    dbg!(&pipeline);
+    */
+    let ab = CSVNode::new(&arena, "/tmp/foo.csv".to_string())
+        .project(&arena, vec![0, 1, 2]);
+    let c = ab.project(&arena, vec![0]);
+    let d = ab.project(&arena, vec![1]);
+
+    dbg!(&ab);
+
+    let arena = arena.into_vec();
+    for node in arena {
+        dbg!(node);
+    }
+}
+
+#[test]
+fn test() {
+    use id_arena::{Arena, Id};
+
+    type AstNodeId = Id<AstNode>;
+
+    #[derive(Debug, Eq, PartialEq)]
+    pub enum AstNode {
+        Const(i64),
+        Var(String),
+        Add { lhs: AstNodeId, rhs: AstNodeId },
+        Sub { lhs: AstNodeId, rhs: AstNodeId },
+        Mul { lhs: AstNodeId, rhs: AstNodeId },
+        Div { lhs: AstNodeId, rhs: AstNodeId },
+    }
+
+    let mut ast_nodes = Arena::<AstNode>::new();
+
+    // Create the AST for `a * (b + 3)`.
+    let three = ast_nodes.alloc(AstNode::Const(3));
+    let b = ast_nodes.alloc(AstNode::Var("b".into()));
+    let b_plus_three = ast_nodes.alloc(AstNode::Add { lhs: b, rhs: three });
+    let a = ast_nodes.alloc(AstNode::Var("a".into()));
+    let a_times_b_plus_three = ast_nodes.alloc(AstNode::Mul {
+        lhs: a,
+        rhs: b_plus_three,
+    });
+
+    // Can use indexing to access allocated nodes.
+    assert_eq!(ast_nodes[three], AstNode::Const(3));
 }
