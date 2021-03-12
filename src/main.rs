@@ -1,4 +1,4 @@
-mod threads;
+mod channels;
 
 fn main() {
 

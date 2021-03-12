@@ -10,15 +10,18 @@ fn do_loop(s: &str, limit: i32) {
     }
 }
 
+#[derive(Debug)]
+struct ST {
+    elem: i32,
+}
+
 #[test]
 fn test() {
-    let handle = thread::spawn(|| {
-        do_loop("child", 10)
+    let v = vec![1, 3, 4];
+    let st = ST { elem: 10 };
+    let handle = thread::spawn(move || {
+        println!("{:?}", v);
     });
 
     handle.join().unwrap();
-
-    do_loop("parent", 5);
-
 }
-
